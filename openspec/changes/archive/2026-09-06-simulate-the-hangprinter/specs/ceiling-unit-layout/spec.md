@@ -13,17 +13,19 @@ rotate([180, 0, 0])`.
 
 #### Scenario: Every imported STL matches the design's matrix
 - **WHEN** the design's CSG is exported and its `import` nodes are read with their composed matrices
-- **THEN** for each of the 51 ceiling and mover imports there is exactly one node in the model on the same file (or, for a print pack, on its named body) whose world vertices coincide with the file's vertices under the design's matrix within 0.01 mm, and the mirrored motors, gears and line guide match under their mirrored matrices
+- **THEN** for each of the 49 ceiling and mover imports there is exactly one node in the model on the same file (or, for a print pack, on its named body) whose world vertices coincide with the file's vertices under the design's matrix within 0.01 mm, and the mirrored motors, gears and line guide match under their mirrored matrices
 
 #### Scenario: Module parts and primitives match the design
 - **WHEN** the same CSG is read for its `cube` and `cylinder` nodes
-- **THEN** the plate, the smooth rods, the beams, the marker discs and the bed have one node each whose bounds coincide with the design's within 0.01 mm
+- **THEN** the plate, the beams, the marker clips, the anchor plates and the bed have one node each whose bounds coincide with the design's cubes within 0.01 mm; the smooth rods, the marker pins and the roller bearings one each whose axis ends coincide with the design's cylinders within 0.02 mm; the marker discs' rims lie where the design's discs are; the clay holders and the landing brackets stand at the heights of the primitives the design draws them with
 
 ### Requirement: The winch parts hold together
 Each winch's rotating stack SHALL be one body per part, each cover shall
 be its main body, and the bracket, motor, gear, rod, roller bearings and
-covers SHALL share no volume with one another or with the stack.
+covers SHALL share no volume with one another or with the stack beyond
+what the design draws: the encoder board in the bracket (at most 2.1 mm³
+per winch) and the D spool's halves (at most 5.3 mm³).
 
 #### Scenario: Integrity of the ceiling unit
 - **WHEN** the model is built at the origin
-- **THEN** every printed solid of the ceiling unit is one body and no two of them share volume
+- **THEN** every printed solid of the ceiling unit is one body and no two of them share volume beyond the stated allowances

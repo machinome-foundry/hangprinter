@@ -14,4 +14,4 @@ with its bullet drawn assembled by the design's `bullet()` module.
 
 #### Scenario: The lines turn at the towers
 - **WHEN** the model is built at the origin
-- **THEN** each anchor's four segment ends and two run ends lie within 40 mm of one of that anchor's two towers, and the plate, towers and bullets share no volume
+- **THEN** each anchor's four segment ends and two run ends lie within 40 mm of one of that anchor's two towers, the plate and the towers share no volume, and each bullet shares at most 131 mm³ with its tower (the design's `bullet()` seats it 1 mm into the sleeve's back wall)

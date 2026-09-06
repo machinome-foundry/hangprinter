@@ -124,18 +124,61 @@ times as far, the belt's phase advances by the spool gear's pitch-line
 travel, and the roller bearings turn the other way at their own radius.
 
 **The belt is a three-circle wrap.** The bracket places a pair of 623
-bearings 87.8 mm from the spool axis at 47 mm height, inside the loop's
-lower span, 7 mm above where a two-pulley loop would run: a tensioner
-pushing the span out of the loop, so the belt bends backwards over it and
-its teeth ride the bearing. The loop is spool gear (255 teeth at the
-pitch radius its count gives), roller (5 mm plus the tooth tips' reach,
-concave), motor gear (20 teeth), 301 teeth, 602.5 mm at 2 mm pitch. The
+bearings 87.8 mm from the spool axis — the gear's outer diameter plus
+one belt thickness — at 47 mm height, level with the top of the motor
+gear. Read with the roller's own numbers, the belt leaves the spool gear
+straight down at its side, its back turns ninety degrees on the roller
+(a concave bend, the smooth back on the bearing), runs level onto the top
+of the motor gear, wraps it, and returns along the long lower span. The
+loop is spool gear (255 teeth at the pitch radius its count gives),
+roller (5 mm plus the back's 0.376 reach, concave), motor gear (20
+teeth): 303 teeth, 606.3 mm at 2 mm pitch. The run down from the gear is
+2 degrees off vertical, because the roller is placed at the gear's outer
+diameter plus 1.4 where the belt's back on the pitch circle is 1.27 mm
+inside that. The
 layout's own `belt()` is a sketch from an earlier bracket — its strips
 pass 10 mm under the roller and a 45 mm vertical strip lands inside the
 spool gear — and is not reproduced. The motor gear STL's toothed band is
 centred 0.7 mm off the belt plane (its 16 mm length is placed by a 7.4
 mm tooth width the file does not have); the belt is drawn in the plane
 the design's belt occupies, centred on the spool gear.
+
+**The design's own overlaps are allowances, stated per pair.** Placed
+exactly where the layout puts them, some parts share volume: the render
+motor's encoder board with the bracket (0.3 to 2.0 mm³ per winch), the D
+spool's two halves 9 mm apart (5.2 mm³), the clay extruder's 40-gon tube
+in its holder's 60-gon ring of the same diameter (7.0 mm³, and 0.005 at
+the top holder), the beams' end corners in the corner clamps' rounded
+pockets (0.08 to 0.09 mm³), the belt's back through the spool covers'
+rim rails where it leaves the gear (0.19 mm³ per cover), and the bullet
+the design's `bullet()` module seats 1 mm into the tower's sleeve back
+wall (131 mm³). The integrity contract carries each as a measured
+allowance, so a new overlap or a grown one still fails, and none is a
+clearance the drawing states. Rejected: moving parts apart by a standoff
+as the Kossel model does — here the placement parity contract holds
+every part at the design's transform to 0.01 mm, and a standoff would
+have to be excused from it.
+
+**Sketch parts get the geometry a part has.** The layout draws each
+hp-mark marker as a disc, a `cube([10, 20, 20])` straight through the
+beam, and a pin through both (2250 mm³ per block in the beam), and its
+stand-in extruder drive as a block straight through the hot end. The
+marker becomes a disc with its pin, one part, and the block a clip with
+the beam's section and the pin's hole taken out of it, its outer bounds
+the layout's; the drive box gets a bore for the barrel. Both take a
+0.05 mm clearance so the pairs can be asked whether they touch — the
+one place the model draws a clearance of its own, on parts the design
+only sketches.
+
+**Interference is decided on the engine, by the project.** The
+framework's `assertNoSolidInterference` reads any nonzero intersection
+volume as interference, and the engine returns −2·10⁻¹⁴ mm³ for the
+spool gear and the mirrored spool, which the design stacks face to face
+(a candidate framework wart: its own contract says exact boundary
+contact passes). The project's `measure.interferences()` runs the same
+Manifold booleans in double precision over bounding-box-filtered pairs
+of printed solids and reads anything under 10⁻⁶ mm³ as contact; the
+framework's `assertNoDisconnectedSolids` is kept as is.
 
 **Knobs.** `beam_length` (400, the design's `Beam_length`) moves the
 mover's beams, the corner clamps, the verticalizers and every action
@@ -160,6 +203,23 @@ are in the design.
   tangent to the spools (`hz = Gap + Sep_disc_radius − Spool_r` above the
   plate); the line therefore winds at 75 mm, which is what the kinematics
   uses.
+- The mover position is the hot end's tip, 77 mm under the corner
+  triangle. With the clay extruder the nozzle hangs 349 mm lower, one
+  millimetre over the bed at `z` 0: the layout lowered the anchors by
+  the extruder's 350 mm for exactly that.
+
+**Framework findings (candidate warts, not filed):**
+- A port bound to a `numpy.float64` is refused as "an expression, not a
+  number"; the strands' constant ends are cast to `float`.
+- A leaf whose mesh is mirrored in `adjust()` turns the other way about
+  its own axis for the same world turn; the winch negates the motor
+  gear's angle on left-handed winches, and the parity contract checks
+  the placement.
+- `solid test <file>` on a file defining several node classes builds
+  every one of them, and a part class without defaults stops the run; the
+  winch's tests are run as `simulation/winch.py:WinchABC`.
+- A scenario's starting pose can only be reached through instructions:
+  `Sim` seeds its bank from the declared defaults and offers no setter.
 
 ## Risks / Trade-offs
 

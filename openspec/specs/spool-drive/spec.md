@@ -1,5 +1,8 @@
-## ADDED Requirements
+# spool-drive Specification
 
+## Purpose
+How a winch turns line into motion: the spool stack turning by what it pays out, the motor gear at the gear ratio, and the GT2 belt between them on the circles the bracket places.
+## Requirements
 ### Requirement: Spools turn by the line they pay out
 Each winch SHALL turn its spool stack (spool gear, spools, separator
 disc) about the sandwich axis by `advantage · (L − L₀) / Spool_r`
@@ -28,8 +31,9 @@ teeth.
 
 #### Scenario: The belt touches all three
 - **WHEN** the model is built at the origin
-- **THEN** on every winch the belt mesh comes within 0.2 mm of each of the three pitch circles' cylinders and no closer than 0.5 mm to the spool axis than its pitch radius less the tooth height, and the belt shares no volume with the bracket, the covers or the motor on the exact kernel
+- **THEN** on every winch the belt's crests stand on the spool gear's and the motor gear's flank circles (pitch radius less 1.004 mm) within 0.1 mm, its back rides the roller's 5 mm rim within 0.1 mm, the run from the gear to the roller is within 3° of vertical and the run from the roller to the motor gear level with the roller's rim within 0.2 mm; and the belt shares no volume with the motor, the encoder or the rod, and at most 0.25 mm³ with each spool cover (the cover's rim rail sits in the belt's path where it leaves the gear: 0.19 mm³ as designed)
 
 #### Scenario: The belt travels with the spool gear
 - **WHEN** anchor A's spool gear turns by one tooth (360/255 degrees)
-- **THEN** the belt's tooth pattern on winch A has advanced by one pitch along the loop within 0.05 mm, and the roller bearings have turned by `2 / 6.004` radians the opposite sense within 0.1°
+- **THEN** the roller bearings have turned by `2 / 5` radians the opposite sense within 0.1°, and the belt's `travel` port carries the spool gear's pitch-line travel of 2 mm
+
