@@ -34,6 +34,10 @@ teeth.
 - **THEN** on every winch the belt's crests stand on the spool gear's and the motor gear's flank circles (pitch radius less 1.004 mm) within 0.1 mm, its back rides the roller's 5 mm rim within 0.1 mm, the run from the gear to the roller is within 3° of vertical and the run from the roller to the motor gear level with the roller's rim within 0.2 mm; and the belt shares no volume with the motor, the encoder or the rod, and at most 0.25 mm³ with each spool cover (the cover's rim rail sits in the belt's path where it leaves the gear: 0.19 mm³ as designed)
 
 #### Scenario: The belt travels with the spool gear
-- **WHEN** anchor A's spool gear turns by one tooth (360/255 degrees)
-- **THEN** the roller bearings have turned by `2 / 5` radians the opposite sense within 0.1°, and the belt's `travel` port carries the spool gear's pitch-line travel of 2 mm
+- **WHEN** anchor A's spool gear turns by half a tooth (180/255 degrees)
+- **THEN** the belt's tooth pattern on the gear's arc has moved half a pitch the gear's way, the roller bearings have turned the opposite sense at the belt's speed over their 5 mm rim within 0.1°, and the belt's `travel` port carries the spool gear's pitch-line travel
+
+#### Scenario: The teeth ride together along a move
+- **WHEN** the mover rises 2 mm in eight steps (about one motor-gear tooth on winch D)
+- **THEN** on every winch the volume the belt shares with the motor gear and with the spool gear swings by less than 3 mm³ over the steps; teeth sweeping through each other would swing it 33 mm³, two cycles per tooth
 

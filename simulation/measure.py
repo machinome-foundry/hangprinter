@@ -112,16 +112,17 @@ def radial_distances(vertices, axis_point, axis_direction):
 
 
 def profile_shift(angles0, radii0, angles1, radii1, step, window):
-    """The angular shift, in degrees, by which the radius-against-angle
-    profile (`angles1`, `radii1`) best matches (`angles0`, `radii0`)
-    shifted, searched over ±`window` degrees in `step` degrees."""
+    """How far, in degrees, the radius-against-angle pattern moved from
+    (`angles0`, `radii0`) to (`angles1`, `radii1`): the shift `s` for
+    which `radii1(a + s) == radii0(a)`, a feature at `a` now at `a + s`,
+    searched over ±`window` degrees in `step` degrees."""
     lo = max(angles0.min(), angles1.min()) + window
     hi = min(angles0.max(), angles1.max()) - window
     grid = numpy.arange(lo, hi, step)
     base = numpy.interp(grid, *_sorted(angles0, radii0))
     best, best_score = 0.0, -numpy.inf
     for shift in numpy.arange(-window, window + step / 2, step):
-        moved_profile = numpy.interp(grid - shift, *_sorted(angles1, radii1))
+        moved_profile = numpy.interp(grid + shift, *_sorted(angles1, radii1))
         score = -float(numpy.abs(moved_profile - base).mean())
         if score > best_score:
             best, best_score = float(shift), score

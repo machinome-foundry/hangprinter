@@ -250,7 +250,10 @@ def _turn(winch, rotor_axis):
     handed = -1.0 if winch.motor_gear.mirrored else 1.0
     winch.motor_gear.rotate(handed * _sign(GEAR_AXIS, rotor_axis) * GEAR_RATIO * degrees,
                             [0, 0, 1])
-    winch.connect(_sign(rotor_axis, WRAP_NORMAL) * radians * SPOOL_PITCH_RADIUS,
+    # molejo circulates the pattern against the loop's clockwise run for a
+    # positive phase, so the belt travels with the gear when its phase is
+    # the pitch-line travel taken the other way round the wrap normal
+    winch.connect(-_sign(rotor_axis, WRAP_NORMAL) * radians * SPOOL_PITCH_RADIUS,
                   winch.belt.travel)
     for roller, axis in zip(winch.rollers, ROLLER_AXES):
         roller.rotate(-_sign(axis, rotor_axis) * degrees * SPOOL_PITCH_RADIUS / ROLLER_RADIUS,

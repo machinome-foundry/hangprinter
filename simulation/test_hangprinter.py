@@ -22,7 +22,7 @@ from simulation.layout import (
     Spool_r, GT2_spool_gear_teeth, GT2_motor_gear_teeth, b623_outer_dia)
 from simulation.measure import (
     design_file, interferences, moved, placement_error, printed_solids, profile_shift,
-    radial_distances, same_segment, stl_nodes, strand_ends, strand_length, turned)
+    radial_distances, same_segment, shared_volume, stl_nodes, strand_ends, strand_length, turned)
 from simulation.part import MIRROR_X, MIRROR_Y
 from simulation.winch import MOTOR_GEAR, MOTOR_GEAR_MIRRORED, BELT_ROLLERS, SANDWICH_ABC, SANDWICH_D
 
@@ -437,6 +437,26 @@ class HangprinterTest(TestCase):
         angles = numpy.degrees(numpy.arctan2(r @ v, r @ u))
         keep = (angles > -100) & (angles < 100)
         return angles[keep], radii[on_gear][keep]
+
+    def test_the_teeth_ride_together(self):
+        """Along a move, the belt's teeth stay put on both gears' teeth:
+        the volume the belt shares with each gear does not change.
+        Teeth sweeping through each other would swing it through two
+        cycles per tooth of gear turn (33 mm³ on the motor gear when the
+        belt's phase ran the wrong way), so the swing is held under a
+        tenth of that."""
+        SWING = 3.0
+        steps = numpy.linspace(0.0, 2.0, 9)      # about one motor-gear tooth on winch D
+        for index, winch in self.node.ceiling.winches.items():
+            for gear in (winch.motor_gear, winch.rotor.spool_gear):
+                volumes = []
+                for z in steps:
+                    self.node.set_state(x=0.0, y=0.0, z=float(z))
+                    volumes.append(shared_volume(winch.belt, gear))
+                swing = max(volumes) - min(volumes)
+                self.assertLess(swing, SWING,
+                                f'winch {layout.WINCH_NAMES[index]} {gear.name}: shared volume swings '
+                                f'{swing:.2f} mm³ along the move: {[round(v, 2) for v in volumes]}')
 
     def test_the_sense_pays_out(self):
         """Lengthening anchor A's line turns winch A so that the spool's

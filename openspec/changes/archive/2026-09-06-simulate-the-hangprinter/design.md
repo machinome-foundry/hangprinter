@@ -122,6 +122,14 @@ sign of `(down × exit) · axis`, computed per winch rather than stated.
 The motor gear turns the same way `Spool_teeth / Motor_teeth` (255/20)
 times as far, the belt's phase advances by the spool gear's pitch-line
 travel, and the roller bearings turn the other way at their own radius.
+The phase's sign is not a convention to reason out: molejo circulates
+the pattern against the loop's clockwise run for a positive phase, and
+the first build had it backwards while a tooth-travel measurement with
+its own sign backwards agreed. The pilot saw every belt run against its
+gear in the browser; the contract that settled it is the one they
+proposed — the volume the belt shares with each gear must not change
+along a move, where teeth sweeping through each other swing it through
+two cycles per tooth.
 
 **The belt is a three-circle wrap.** The bracket places a pair of 623
 bearings 87.8 mm from the spool axis — the gear's outer diameter plus
