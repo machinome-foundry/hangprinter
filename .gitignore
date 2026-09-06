@@ -5,3 +5,7 @@ to_make_*
 .gitignore
 stl/*
 *.blend
+_build/
+__pycache__/
+.env
+screenshot.png

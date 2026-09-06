@@ -1,0 +1,5 @@
+[tool.solid-node]
+model = "simulation.hangprinter:Hangprinter"
+
+[tool.libresolid-studio]
+profile = "builder"
