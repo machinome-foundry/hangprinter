@@ -4,13 +4,12 @@ belt roller bearings, and the belt between them, in the frame
 `sandwich_and_motor_ABC()` draws them in -- the sandwich's base on the
 origin, the spool axis along Y at `bearing_z`, the motor out along +X.
 
-The winch reads one port, `line`: millimetres of line paid out since
-the origin pose, signed so that a positive value turns the stack about
-its own +Z.  The ceiling, which knows which way each winch's line leaves
-its spool, supplies the sign; the winch converts millimetres to degrees
-at `Spool_r`, turns the motor gear `Spool_teeth / Motor_teeth` as far the
-same way, advances the belt by the spool gear's pitch-line travel and
-spins the rollers under its back.
+The stack is one revolute joint (`RotorABC.turn` / `RotorD.turn`); the
+root binds it to the line the winch pays out.  Everything below the
+stack is a transmission stated as a relation, by ratio: the motor gear
+turns `Spool_teeth / Motor_teeth` as far the same way, the belt advances
+by the spool gear's pitch-line travel, and the two roller bearings spin
+under its back.
 
 The motor bracket is a ceiling part: the four brackets are four files,
 and the winches are otherwise two kinds, ABC and D.
@@ -20,6 +19,7 @@ import math
 
 import numpy
 from molejo import P, Shape, Wrap
+from solid_node.motion.joints import Revolute
 from solid_node.motion.ports import TranslationalPort
 from solid_node.node import AssemblyNode
 from solid_node.parameters import Flag, Length
@@ -46,11 +46,28 @@ from simulation.layout import (
     SMOOTH_ROD_DIAMETER,
     Smooth_rod_length_ABC,
     Smooth_rod_length_D,
-    Spool_r,
     b623_outer_dia,
 )
 from simulation.part import MIRROR_X, DesignStl, Rod, ScadPart, place
 from simulation.scad import util
+
+
+# --- the shared shaft axis --------------------------------------------------------
+
+#: The direction every motor gear and both belt roller bearings turn
+#: about, in every winch: the motor shaft's own axis, the winch frame's
+#: Y.  Declaring a leaf's joint about this shared axis, rather than
+#: about the leaf's own placed +Z, is what lets one declaration serve
+#: both the unmirrored and the mirrored leaf: the framework carries this
+#: direction into each body's own frame and finds the local axis
+#: mirrored gears turn about there too.
+SHAFT_AXIS = (0.0, 1.0, 0.0)
+
+#: `BELT_ROLLER_CENTRE` read back into three dimensions: the point both
+#: roller bearings share on the shaft axis -- `belt_roller_bearings()`
+#: offsets them from it along Y, in opposite directions, so one anchor
+#: serves both copies.
+BELT_ROLLER_AXIS = (layout.BELT_ROLLER_CENTRE[0], 0.0, layout.BELT_ROLLER_CENTRE[1])
 
 
 # --- the parts ------------------------------------------------------------------
@@ -120,14 +137,23 @@ class Encoder(DesignStl):
 
 
 class MotorGear(DesignStl):
+    """The mirrored placement (`MOTOR_GEAR_MIRRORED`) differs from the
+    unmirrored one only by a mirror in the bracket frame whose
+    displacement is along the shaft, so mirrored and unmirrored gears
+    sit on one line and this one declaration serves both."""
     stl_source = '../stl/for_render/GT2_motor_gear.stl'
     color = materials.MOTOR_GEAR
+
+    turn = Revolute(axis=SHAFT_AXIS,
+                    at=tuple(float(v) for v in layout.MOTOR_SHAFT), unit='deg')
 
 
 class RollerBearing(ScadPart):
     """A flanged 623, as `util.scad` draws it: 10 mm across, 4 wide,
     with its 11 mm flange at the base."""
     color = materials.BEARING
+
+    spin = Revolute(axis=SHAFT_AXIS, at=BELT_ROLLER_AXIS, unit='deg')
 
     def render(self):
         return util.b623_flanged()
@@ -175,6 +201,12 @@ def belt_circles():
 SPOOL_PITCH_RADIUS = belt_circles()[0]['radius']
 ROLLER_RADIUS = b623_outer_dia / 2
 GEAR_RATIO = GT2_spool_gear_teeth / GT2_motor_gear_teeth
+#: The roller's turn for the spool's: the belt's back drives it at the
+#: spool gear's pitch radius over the roller's own.
+ROLLER_RATIO = SPOOL_PITCH_RADIUS / ROLLER_RADIUS
+#: A degree of spool turn, in millimetres of belt (the spool gear's
+#: pitch-line travel).
+BELT_MM_PER_DEGREE = SPOOL_PITCH_RADIUS * math.pi / 180.0
 
 
 class Belt(gt2.Belt):
@@ -193,11 +225,27 @@ class Belt(gt2.Belt):
         )
 
 
+# --- the axis and sign helpers ------------------------------------------------------
+
+def _axis(matrix):
+    return direction(matrix, (0, 0, 1))
+
+
+def _sign(a, b):
+    return 1.0 if float(numpy.dot(a, b)) > 0 else -1.0
+
+
+WRAP_NORMAL = _axis(BELT)
+
+
 # --- the stacks that turn ----------------------------------------------------------
 
 class RotorABC(AssemblyNode):
     """`sandwich_ABC()` less its covers: gear and two spools, on the
     sandwich's own axis."""
+
+    turn = Revolute(axis=tuple(float(v) for v in _axis(SANDWICH_ABC)),
+                    at=tuple(float(v) for v in SANDWICH_ABC[:3, 3]), unit='deg')
 
     spool_gear = SpoolGear()
     spool_mirrored = SpoolMirrored()
@@ -212,6 +260,9 @@ class RotorD(AssemblyNode):
     """`sandwich_D()` less its covers: gear, the left spool with its
     separator disc, the right spool's two halves."""
 
+    turn = Revolute(axis=tuple(float(v) for v in _axis(SANDWICH_D)),
+                    at=tuple(float(v) for v in SANDWICH_D[:3, 3]), unit='deg')
+
     spool_gear = SpoolGear()
     dleft_spool = DleftSpool()
     sep_disc = SepDisc()
@@ -221,44 +272,6 @@ class RotorD(AssemblyNode):
     def render(self):
         for name in ROTOR_D:
             place(getattr(self, name), SANDWICH_D_PARTS[name])
-
-
-# --- the senses, from the placements ------------------------------------------------
-
-def _axis(matrix):
-    return direction(matrix, (0, 0, 1))
-
-
-def _sign(a, b):
-    return 1.0 if float(numpy.dot(a, b)) > 0 else -1.0
-
-
-WRAP_NORMAL = _axis(BELT)
-GEAR_AXIS = _axis(MOTOR_GEAR)
-ROLLER_AXES = [_axis(matrix) for matrix in BELT_ROLLERS]
-
-
-def _turn(winch, rotor_axis):
-    """Turn everything by the line the port says was paid out."""
-    paid = winch.line.value
-    if paid is None:
-        paid = 0.0
-    radians = paid / Spool_r
-    degrees = radians * 180.0 / math.pi
-    winch.rotor.rotate(degrees, [0, 0, 1])
-    # a leaf drawn mirrored turns the other way about its own axis for the
-    # same turn in the world: its frame is a reflection of the design's
-    handed = -1.0 if winch.motor_gear.mirrored else 1.0
-    winch.motor_gear.rotate(handed * _sign(GEAR_AXIS, rotor_axis) * GEAR_RATIO * degrees,
-                            [0, 0, 1])
-    # molejo circulates the pattern against the loop's clockwise run for a
-    # positive phase, so the belt travels with the gear when its phase is
-    # the pitch-line travel taken the other way round the wrap normal
-    winch.connect(-_sign(rotor_axis, WRAP_NORMAL) * radians * SPOOL_PITCH_RADIUS,
-                  winch.belt.travel)
-    for roller, axis in zip(winch.rollers, ROLLER_AXES):
-        roller.rotate(-_sign(axis, rotor_axis) * degrees * SPOOL_PITCH_RADIUS / ROLLER_RADIUS,
-                      [0, 0, 1])
 
 
 class WinchABC(AssemblyNode):
@@ -280,10 +293,22 @@ class WinchABC(AssemblyNode):
     rollers = RollerBearing().repeat(2)
     belt = Belt()
 
-    line = TranslationalPort(unit='mm')
-
     #: The stack's axis in the winch frame.
     AXIS = _axis(SANDWICH_ABC)
+
+    #: Which way the stack's own axis points against the shared shaft
+    #: axis: both pulleys are inside the toothed loop, so the motor gear
+    #: turns the stack's way at the tooth ratio, and the framework finds
+    #: this same sign on the gear's own mirrored or unmirrored placement.
+    SENSE = _sign(SHAFT_AXIS, AXIS)          # -1
+    #: molejo circulates the tooth pattern against the loop's clockwise
+    #: run for a positive phase, so the belt travels with the gear when
+    #: its phase is the pitch-line travel taken the other way round the
+    #: wrap normal.
+    BELT_SENSE = -_sign(AXIS, WRAP_NORMAL)   # -1
+
+    rotor.drives(motor_gear.turn, ratio=SENSE * GEAR_RATIO)
+    rotor.drives(belt.travel, ratio=BELT_SENSE * BELT_MM_PER_DEGREE)
 
     def render(self):
         place(self.rotor, SANDWICH_ABC)
@@ -299,7 +324,14 @@ class WinchABC(AssemblyNode):
         place(self.belt, BELT)
 
     def simulate(self):
-        _turn(self, self.AXIS)
+        # a relation cannot yet fan out over a `.repeat()` child (recorded
+        # in solid-node's workflow/warts.md), so the two roller bearings
+        # are bound by hand here -- a joint binding, not a hand rotate.
+        turn = self.rotor.turn.value
+        if turn is None:                     # a winch built on its own stands still
+            self.rotor.turn = turn = 0.0
+        for roller in self.rollers:
+            roller.spin = -self.SENSE * ROLLER_RATIO * turn
 
 
 class WinchD(AssemblyNode):
@@ -315,9 +347,13 @@ class WinchD(AssemblyNode):
     rollers = RollerBearing().repeat(2)
     belt = Belt()
 
-    line = TranslationalPort(unit='mm')
-
     AXIS = _axis(SANDWICH_D)
+
+    SENSE = _sign(SHAFT_AXIS, AXIS)          # +1
+    BELT_SENSE = -_sign(AXIS, WRAP_NORMAL)   # +1
+
+    rotor.drives(motor_gear.turn, ratio=SENSE * GEAR_RATIO)
+    rotor.drives(belt.travel, ratio=BELT_SENSE * BELT_MM_PER_DEGREE)
 
     def render(self):
         place(self.rotor, SANDWICH_D)
@@ -332,4 +368,8 @@ class WinchD(AssemblyNode):
         place(self.belt, BELT)
 
     def simulate(self):
-        _turn(self, self.AXIS)
+        turn = self.rotor.turn.value
+        if turn is None:                     # a winch built on its own stands still
+            self.rotor.turn = turn = 0.0
+        for roller in self.rollers:
+            roller.spin = -self.SENSE * ROLLER_RATIO * turn

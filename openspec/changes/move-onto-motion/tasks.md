@@ -39,54 +39,74 @@ report the assertion.
 
 ## 2. Stage B — the motion refactor
 
-- [ ] 2.1 `mover.py`: declare `travel_x`, `travel_y`, `travel_z` as
+- [x] 2.1 `mover.py`: declare `travel_x`, `travel_y`, `travel_z` as
       `Prismatic` joints on `Mover`, axes `(1,0,0)`, `(0,1,0)`, `(0,0,1)`,
       no `at`, no `range`.
-- [ ] 2.2 `hangprinter.py`: state `x.drives(mover.travel_x)`,
+- [x] 2.2 `hangprinter.py`: state `x.drives(mover.travel_x)`,
       `y.drives(mover.travel_y)`, `z.drives(mover.travel_z)` in the class
       body and delete `self.mover.translate([...])` from `simulate()`.
-- [ ] 2.3 `winch.py`: declare `turn = Revolute(...)` on `RotorABC` and
+      Written just after `mover = Mover(...)` is declared (not right
+      after the `x`/`y`/`z` drivers, where `mover` does not exist yet) —
+      not a deviation from the proposal's mechanism, just where Python
+      class-body execution order requires the statement to live.
+- [x] 2.3 `winch.py`: declare `turn = Revolute(...)` on `RotorABC` and
       `RotorD` from `SANDWICH_ABC` / `SANDWICH_D` (axis = the placed +Z,
       anchor = the placed origin, both as tuples of plain floats);
       `turn = Revolute(axis=SHAFT_AXIS, at=tuple(MOTOR_SHAFT))` on
       `MotorGear`; `spin = Revolute(axis=SHAFT_AXIS, at=BELT_ROLLER_AXIS)`
-      on `RollerBearing`. Add `SHAFT_AXIS`, `ROLLER_RATIO`,
-      `BELT_MM_PER_DEGREE`, and per winch class `SENSE` and `BELT_SENSE`.
-- [ ] 2.4 `winch.py`: state the two relations in each winch class —
+      on `RollerBearing`. Added `SHAFT_AXIS`, `BELT_ROLLER_AXIS`,
+      `ROLLER_RATIO`, `BELT_MM_PER_DEGREE`, and per winch class `SENSE`
+      and `BELT_SENSE` — measured `SENSE`/`BELT_SENSE` = -1/-1 on
+      `WinchABC`, +1/+1 on `WinchD`, exactly the proposal's prediction.
+- [x] 2.4 `winch.py`: stated the two relations in each winch class —
       `rotor.drives(motor_gear.turn, ratio=SENSE * GEAR_RATIO)` and
       `rotor.drives(belt.travel, ratio=BELT_SENSE * BELT_MM_PER_DEGREE)`.
-      Delete `_turn()`, the `line` port, `handed`, `GEAR_AXIS` and
-      `ROLLER_AXES`; leave each winch a four-line `simulate()` that gives
+      Deleted `_turn()`, both `line` ports, `handed`, `GEAR_AXIS` and
+      `ROLLER_AXES`; each winch keeps a four-line `simulate()` that gives
       the stack a rest value when nothing bound it and fans the two
-      rollers out at `-SENSE * ROLLER_RATIO`.
-- [ ] 2.5 `ceiling.py`: delete the four `line_*` ports, the `lines`
-      property and `simulate()`; promote `_sense` to
-      `Ceiling.spool_sense(index)` using `self.sidelength` and the winch's
-      `AXIS`. Keep the `winches` property.
-- [ ] 2.6 `hangprinter.py`: bind each winch's stack coordinate by path in
+      rollers out at `-SENSE * ROLLER_RATIO`. Deviation: the proposal's
+      sketch reads bare `SENSE` inside `simulate()`; `SENSE` is a
+      class-body constant, not a lexical name a method body can see
+      unqualified in Python, so the method reads `self.SENSE` (module
+      global `ROLLER_RATIO` is read bare, correctly). Same value, correct
+      attribute access.
+- [x] 2.5 `ceiling.py`: deleted the four `line_*` ports, the `lines`
+      property and `simulate()`; the module-level `_sense` function's body
+      is now `Ceiling.spool_sense(index)` (inlined rather than kept as a
+      free function the method calls through — "promoted to a one-line
+      method" read literally). Kept the `winches` property.
+- [x] 2.6 `hangprinter.py`: binds each winch's stack coordinate by path in
       `simulate()` — `self.ceiling.winches[anchor].rotor.turn` — keeping
       today's arithmetic order exactly (sense on the millimetres, then
-      `/ Spool_r`, then `* 180.0 / math.pi`). The strand loops,
-      `_bind` and `_to_mover` stay.
-- [ ] 2.7 Update the module docstrings that describe the old chain:
-      `hangprinter.py` ("everything follows"), `ceiling.py` ("The ceiling
-      reads four ports"), `winch.py` ("The winch reads one port, `line`").
+      `/ Spool_r`, then `* 180.0 / math.pi`). The strand loops, `_bind`
+      and `_to_mover` are unchanged. `Spool_r` is now imported in
+      `hangprinter.py` (used to live only in `winch.py`).
+- [x] 2.7 Updated the module docstrings that described the old chain:
+      `hangprinter.py`, `ceiling.py`, `winch.py`.
 
 ## 3. Evidence again
 
-- [ ] 3.1 Re-capture to `/tmp/hangprinter-after.json` and
-      `capture_poses.py compare before after`: maximum world-matrix
-      deviation 0 over every leaf and every pose. The port sets differ by
-      construction — `line_a..d` and `winch.line` are gone, the joint
-      coordinates (`turn`, `spin`, `travel_*`) are new — so report the
-      matrix deviation and the port names added and removed separately.
-- [ ] 3.2 Run both suites again: exactly the tests that were green at
-      stage A are green, none newly red.
-- [ ] 3.3 Commit as `refactor(simulation): move the Hangprinter onto
+- [x] 3.1 Re-captured to `/tmp/hangprinter-after.json` and
+      `capture_poses.py compare before after`: **max deviation 0.000e+00
+      over 20 poses**, zero problems reported. Port sets differ by
+      construction, checked separately by diffing declared ports between
+      the two snapshots at the `defaults` pose:
+      removed — `ceiling.line_a/b/c/d`, `ceiling.winch_{a,b,c,d}.line`
+      (8 ports); added — `mover.travel_{x,y,z}` (3), each
+      `winch_*.rotor.turn` (4), each `winch_*.motor_gear.turn` (4), each
+      `winch_*.rollers[0,1].spin` (8) — 19 new joint coordinates. Exactly
+      the sets the proposal names as going and arriving.
+- [x] 3.2 Ran both suites again: `simulation/hangprinter.py` 19/19
+      passed (same 19 as baseline: 17 `HangprinterTest` +
+      2 `HangprinterScenarioTest`); `simulation/winch.py` (`WinchABC`)
+      5/5 passed (same 5 as baseline) — including the standalone-winch
+      case (known gap 2), which the `if turn is None: ... = 0.0` rest
+      binding keeps green with no test edit. No test went red.
+- [x] 3.3 Committed as `refactor(simulation): move the Hangprinter onto
       solid-node joints and couplings`, with the pose result and the test
       counts in the body.
-- [ ] 3.4 Report: the two commit hashes, the pose comparison line, test
-      counts before and after, every deviation from the proposal (and why
-      the nearest right thing was right), and every test you believe needs
-      a change with the reason. Do not sync or archive this change; the
+- [x] 3.4 Reported to the orchestrator (see the implementer's final
+      message): the two commit hashes, the pose comparison line, test
+      counts before and after, every deviation from the proposal, and no
+      test believed to need a change. Not synced or archived here; the
       orchestrator does that after review.

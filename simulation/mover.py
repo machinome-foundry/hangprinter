@@ -8,6 +8,7 @@ the hot end and the drive box its `else` branch draws.
 """
 
 from solid2 import cube, cylinder
+from solid_node.motion.joints import Prismatic
 from solid_node.node import AssemblyNode, Solid2Node
 from solid_node.parameters import Flag, Length
 
@@ -146,6 +147,15 @@ class Mover(AssemblyNode):
 
     beam_length = Length(layout.Beam_length, min=0)
     clay = Flag(True)
+
+    #: The mover's three freedoms against the ceiling: `Hangprinter.render()`
+    #: never places this node, so the parent frame is the machine frame and
+    #: these axes are the machine's own -- exactly the frame
+    #: `Hangprinter.simulate()` used to translate in by hand. No `range`:
+    #: the drivers already carry the sliders' presentation range.
+    travel_x = Prismatic(axis=(1, 0, 0), unit='mm')
+    travel_y = Prismatic(axis=(0, 1, 0), unit='mm')
+    travel_z = Prismatic(axis=(0, 0, 1), unit='mm')
 
     sidelength = beam_length + Length(2 * Cc_plastic_length)
     shorter_beam = sidelength / sidelength_frac

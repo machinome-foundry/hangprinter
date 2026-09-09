@@ -5,16 +5,16 @@ D and A lines leave through, the wire rewinder, the landing brackets,
 the ODrives and the plate.  The machine hangs it under anchor D upside
 down.
 
-The ceiling reads four ports, one per winch: millimetres of line paid
-out.  It knows which way each winch's line leaves its spool, so it
-signs the value for the winch, which turns its stack about its own axis.
+The ceiling knows which way each winch's line leaves its spool --
+`spool_sense()` signs a stack turn for it -- but no longer carries any
+line's millimetres itself: the root binds each winch's stack coordinate
+directly, by path, once it has converted a line length to a turn.
 """
 
 import math
 
 import numpy
 from solid2 import circle, cylinder, linear_extrude, square
-from solid_node.motion.ports import TranslationalPort
 from solid_node.node import AssemblyNode, Solid2Node
 from solid_node.parameters import Length
 
@@ -110,16 +110,6 @@ class ODrive(Solid2Node):
         return linear_extrude(height=ODRIVE_SIZE[2])(board)
 
 
-def _sense(winch_index, axis, sidelength):
-    """+1 when a positive turn about `axis` pays the winch's line out
-    along the segment that leaves its spool, else -1: the bottom of the
-    spool, `Spool_r` under the axis, moves with `axis x down`.  Both
-    directions are in the winch's own frame."""
-    _, exit_direction = layout.spool_exit(winch_index, sidelength)
-    moving = numpy.cross(axis, (0.0, 0.0, -1.0))
-    return 1.0 if float(numpy.dot(moving, exit_direction)) > 0 else -1.0
-
-
 class Ceiling(AssemblyNode):
 
     beam_length = Length(layout.Beam_length, min=0)
@@ -145,19 +135,21 @@ class Ceiling(AssemblyNode):
     odrives = ODrive().repeat(2)
     plate = Plate(x=PLATE_SIZE[0], y=PLATE_SIZE[1], z=PLATE_SIZE[2])
 
-    #: Line paid out by each winch, in millimetres, positive paying out.
-    line_a = TranslationalPort(unit='mm')
-    line_b = TranslationalPort(unit='mm')
-    line_c = TranslationalPort(unit='mm')
-    line_d = TranslationalPort(unit='mm')
-
     @property
     def winches(self):
         return {A: self.winch_a, B: self.winch_b, C: self.winch_c, D: self.winch_d}
 
-    @property
-    def lines(self):
-        return {A: self.line_a, B: self.line_b, C: self.line_c, D: self.line_d}
+    def spool_sense(self, index):
+        """+1 when a positive turn about a winch's stack axis pays its
+        line out along the segment that leaves its spool, else -1: the
+        bottom of the spool, `Spool_r` under the axis, moves with
+        `axis x down`.  Both directions are in the winch's own frame.
+        Which way a winch's line leaves its spool is the ceiling's own
+        knowledge -- it needs the sidelength and the winch's axis."""
+        axis = self.winches[index].AXIS
+        _, exit_direction = layout.spool_exit(index, self.sidelength)
+        moving = numpy.cross(axis, (0.0, 0.0, -1.0))
+        return 1.0 if float(numpy.dot(moving, exit_direction)) > 0 else -1.0
 
     def render(self):
         for index, winch in self.winches.items():
@@ -179,10 +171,3 @@ class Ceiling(AssemblyNode):
         for node, matrix in zip(self.odrives, ODRIVES):
             place(node, matrix)
         place(self.plate, PLATE)
-
-    def simulate(self):
-        for index, winch in self.winches.items():
-            paid = self.lines[index].value
-            if paid is None:
-                paid = 0.0
-            self.connect(_sense(index, winch.AXIS, self.sidelength) * paid, winch.line)

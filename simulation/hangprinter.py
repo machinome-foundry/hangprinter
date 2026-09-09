@@ -5,10 +5,13 @@ machine at rest for a figure; this package reads that figure into a
 machine that moves.  The ceiling unit hangs under anchor D with its four
 winches; the mover hangs from the lines; three anchors stand on the
 floor.  The drivers are the mover's position -- `x`, `y`, `z` in the
-design's frame, the calibrated origin on the bed -- and everything
-follows: four line lengths, four spool angles, four motor gears, four
-belts, and fifteen strands redrawn from the anchors and the ceiling to
-the mover.
+design's frame, the calibrated origin on the bed -- driving the mover's
+three translational joints directly, one relation each.  Everything else
+follows from that position: four line lengths (a prescribed law, not a
+relation -- a cable robot's inverse kinematics), each bound onto the
+stack it turns; four motor gears and four belts turn with their stack by
+ratio; and fifteen strands are redrawn from the anchors and the ceiling
+to the mover.
 """
 
 import math
@@ -30,6 +33,7 @@ from simulation.layout import (
     CEILING, CEILING_LINES,
     Cc_plastic_length,
     MOVER_LIFT,
+    Spool_r,
     anchors,
 )
 from simulation.mover import Mover
@@ -81,6 +85,14 @@ class Hangprinter(AssemblyNode):
     mover = Mover(beam_length=beam_length, clay=clay)
     anchors = Anchor().repeat(3)
     bed = Bed(x=BED_SIZE[0], y=BED_SIZE[1], z=BED_SIZE[2])
+
+    #: The mover hangs free in the machine frame: three translational
+    #: freedoms against the ceiling, one per driver, ratio 1 offset 0 --
+    #: the driver is in millimetres of the machine frame and so is the
+    #: joint.
+    x.drives(mover.travel_x)
+    y.drives(mover.travel_y)
+    z.drives(mover.travel_z)
 
     #: The ceiling's internal lines, the runs down to the anchors, the
     #: three D lines and the twelve anchor segments.
@@ -152,10 +164,9 @@ class Hangprinter(AssemblyNode):
         return [self.x + shift[0], self.y + shift[1], self.z + shift[2]]
 
     def simulate(self):
-        """Put the mover where the drivers say, redraw every line to it,
-        and tell the ceiling how much line each winch has paid out."""
-        self.mover.translate([self.x, self.y, self.z])
-
+        """Redraw every line to the mover -- placed by the drivers
+        through the three `travel_*` relations -- and tell each winch
+        how far its stack has turned."""
         for strand, (start, end) in zip(self.internal, self.internal_segments()):
             self._bind(strand, end - start)
         for strand, (start, end) in zip(self.runs, self.run_segments()):
@@ -165,7 +176,9 @@ class Hangprinter(AssemblyNode):
         for strand, (start, offset) in zip(self.anchor_lines, self.anchor_segments()):
             self._bind(strand, self._to_mover(start, offset))
 
-        for anchor, port in zip((A, B, C, D), (self.ceiling.line_a, self.ceiling.line_b,
-                                               self.ceiling.line_c, self.ceiling.line_d)):
+        for anchor in (A, B, C, D):
+            winch = self.ceiling.winches[anchor]
             rest = layout.line_length(anchor, (0.0, 0.0, 0.0))
-            self.connect(ADVANTAGE[anchor] * (self.line_length(anchor) - rest), port)
+            paid = ADVANTAGE[anchor] * (self.line_length(anchor) - rest)
+            radians = self.ceiling.spool_sense(anchor) * paid / Spool_r
+            winch.rotor.turn = radians * 180.0 / math.pi
