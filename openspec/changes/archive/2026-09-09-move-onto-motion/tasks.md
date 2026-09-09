@@ -110,3 +110,10 @@ report the assertion.
       counts before and after, every deviation from the proposal, and no
       test believed to need a change. Not synced or archived here; the
       orchestrator does that after review.
+
+## Review (orchestrator, 2026-09-09)
+
+Diff matches the reviewed proposal; poses bit-identical over 20 poses
+and 149 leaves; 19/19 and 5/5 green before and after. The three
+mechanical deviations (relation placement after the mover's declaration,
+`self.SENSE`, the inlined `spool_sense`) are accepted. Archived.
