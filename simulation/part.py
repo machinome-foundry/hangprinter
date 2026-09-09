@@ -11,7 +11,8 @@ import numpy
 from molejo import Circle, Line, P, Shape
 from scipy.spatial.transform import Rotation
 from solid2 import cube, cylinder
-from solid_node.node import MolejoNode, Solid2Node, StlNode, TranslationalPort
+from solid_node.motion.ports import TranslationalPort
+from solid_node.node import MolejoNode, Solid2Node, StlNode
 from solid_node.parameters import Flag, Length
 
 from simulation import materials

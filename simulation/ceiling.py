@@ -14,7 +14,8 @@ import math
 
 import numpy
 from solid2 import circle, cylinder, linear_extrude, square
-from solid_node.node import AssemblyNode, Solid2Node, TranslationalPort
+from solid_node.motion.ports import TranslationalPort
+from solid_node.node import AssemblyNode, Solid2Node
 from solid_node.parameters import Length
 
 from simulation import layout, materials
