@@ -69,6 +69,13 @@ SHAFT_AXIS = (0.0, 1.0, 0.0)
 #: serves both copies.
 BELT_ROLLER_AXIS = (layout.BELT_ROLLER_CENTRE[0], 0.0, layout.BELT_ROLLER_CENTRE[1])
 
+#: `layout.MOTOR_SHAFT` read back as plain floats: the point every motor
+#: gear's own axis passes through, in the winch frame -- the mirrored
+#: placement differs from the unmirrored one only by a mirror whose
+#: displacement is along this same shaft, so one anchor, stated at each
+#: site, serves the mirrored and unmirrored leaf alike.
+MOTOR_SHAFT = tuple(float(v) for v in layout.MOTOR_SHAFT)
+
 
 # --- the parts ------------------------------------------------------------------
 
@@ -140,20 +147,21 @@ class MotorGear(DesignStl):
     """The mirrored placement (`MOTOR_GEAR_MIRRORED`) differs from the
     unmirrored one only by a mirror in the bracket frame whose
     displacement is along the shaft, so mirrored and unmirrored gears
-    sit on one line and this one declaration serves both."""
+    sit on one line and one declaration, stated at each site, serves
+    both -- `turn` is declared where each winch places its own
+    `motor_gear`, not here."""
     stl_source = '../stl/for_render/GT2_motor_gear.stl'
     color = materials.MOTOR_GEAR
-
-    turn = Revolute(axis=SHAFT_AXIS,
-                    at=tuple(float(v) for v in layout.MOTOR_SHAFT), unit='deg')
 
 
 class RollerBearing(ScadPart):
     """A flanged 623, as `util.scad` draws it: 10 mm across, 4 wide,
-    with its 11 mm flange at the base."""
+    with its 11 mm flange at the base. `spin` is declared where each
+    winch places its own `rollers` repeat, not here: the shaft axis and
+    the belt roller axis are the winch's own frame's, and one site
+    declaration on the repeat carries both copies through their own
+    rest placement."""
     color = materials.BEARING
-
-    spin = Revolute(axis=SHAFT_AXIS, at=BELT_ROLLER_AXIS, unit='deg')
 
     def render(self):
         return util.b623_flanged()
@@ -244,8 +252,7 @@ class RotorABC(AssemblyNode):
     """`sandwich_ABC()` less its covers: gear and two spools, on the
     sandwich's own axis."""
 
-    turn = Revolute(axis=tuple(float(v) for v in _axis(SANDWICH_ABC)),
-                    at=tuple(float(v) for v in SANDWICH_ABC[:3, 3]), unit='deg')
+    turn = Revolute(axis=(0.0, 0.0, 1.0), unit='deg')
 
     spool_gear = SpoolGear()
     spool_mirrored = SpoolMirrored()
@@ -260,8 +267,7 @@ class RotorD(AssemblyNode):
     """`sandwich_D()` less its covers: gear, the left spool with its
     separator disc, the right spool's two halves."""
 
-    turn = Revolute(axis=tuple(float(v) for v in _axis(SANDWICH_D)),
-                    at=tuple(float(v) for v in SANDWICH_D[:3, 3]), unit='deg')
+    turn = Revolute(axis=(0.0, 0.0, 1.0), unit='deg')
 
     spool_gear = SpoolGear()
     dleft_spool = DleftSpool()
@@ -289,8 +295,10 @@ class WinchABC(AssemblyNode):
     rod = SmoothRod(diameter=SMOOTH_ROD_DIAMETER, length=Smooth_rod_length_ABC)
     motor = Motor(mirrored=left_handed)
     encoder = Encoder(mirrored=left_handed)
-    motor_gear = MotorGear(mirrored=left_handed)
-    rollers = RollerBearing().repeat(2)
+    motor_gear = MotorGear(mirrored=left_handed,
+                            turn=Revolute(axis=SHAFT_AXIS, at=MOTOR_SHAFT, unit='deg'))
+    rollers = RollerBearing(spin=Revolute(axis=SHAFT_AXIS, at=BELT_ROLLER_AXIS,
+                                          unit='deg')).repeat(2)
     belt = Belt()
 
     #: The stack's axis in the winch frame.
@@ -309,6 +317,7 @@ class WinchABC(AssemblyNode):
 
     rotor.drives(motor_gear.turn, ratio=SENSE * GEAR_RATIO)
     rotor.drives(belt.travel, ratio=BELT_SENSE * BELT_MM_PER_DEGREE)
+    rotor.drives(rollers.spin, ratio=-SENSE * ROLLER_RATIO)
 
     def render(self):
         place(self.rotor, SANDWICH_ABC)
@@ -324,14 +333,8 @@ class WinchABC(AssemblyNode):
         place(self.belt, BELT)
 
     def simulate(self):
-        # a relation cannot yet fan out over a `.repeat()` child (recorded
-        # in solid-node's workflow/warts.md), so the two roller bearings
-        # are bound by hand here -- a joint binding, not a hand rotate.
-        turn = self.rotor.turn.value
-        if turn is None:                     # a winch built on its own stands still
-            self.rotor.turn = turn = 0.0
-        for roller in self.rollers:
-            roller.spin = -self.SENSE * ROLLER_RATIO * turn
+        if self.rotor.turn.value is None:    # a winch built on its own stands still
+            self.rotor.turn = 0.0
 
 
 class WinchD(AssemblyNode):
@@ -343,8 +346,9 @@ class WinchD(AssemblyNode):
     rod = SmoothRod(diameter=SMOOTH_ROD_DIAMETER, length=Smooth_rod_length_D)
     motor = Motor()
     encoder = Encoder()
-    motor_gear = MotorGear()
-    rollers = RollerBearing().repeat(2)
+    motor_gear = MotorGear(turn=Revolute(axis=SHAFT_AXIS, at=MOTOR_SHAFT, unit='deg'))
+    rollers = RollerBearing(spin=Revolute(axis=SHAFT_AXIS, at=BELT_ROLLER_AXIS,
+                                          unit='deg')).repeat(2)
     belt = Belt()
 
     AXIS = _axis(SANDWICH_D)
@@ -354,6 +358,7 @@ class WinchD(AssemblyNode):
 
     rotor.drives(motor_gear.turn, ratio=SENSE * GEAR_RATIO)
     rotor.drives(belt.travel, ratio=BELT_SENSE * BELT_MM_PER_DEGREE)
+    rotor.drives(rollers.spin, ratio=-SENSE * ROLLER_RATIO)
 
     def render(self):
         place(self.rotor, SANDWICH_D)
@@ -368,8 +373,5 @@ class WinchD(AssemblyNode):
         place(self.belt, BELT)
 
     def simulate(self):
-        turn = self.rotor.turn.value
-        if turn is None:                     # a winch built on its own stands still
-            self.rotor.turn = turn = 0.0
-        for roller in self.rollers:
-            roller.spin = -self.SENSE * ROLLER_RATIO * turn
+        if self.rotor.turn.value is None:    # a winch built on its own stands still
+            self.rotor.turn = 0.0
