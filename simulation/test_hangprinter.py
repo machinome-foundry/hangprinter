@@ -10,8 +10,8 @@ stays out of everything.
 import math
 
 import numpy
-from solid_node.simulation import ScenarioTest
-from solid_node.test import TestCase
+from machinome.simulation import ScenarioTest
+from machinome.test import TestCase
 
 from simulation import csg, layout
 from simulation.frames import apply

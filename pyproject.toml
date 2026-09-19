@@ -1,5 +1,5 @@
-[tool.solid-node]
+[tool.machinome]
 model = "simulation.hangprinter:Hangprinter"
 
-[tool.libresolid-studio]
+[tool.machinome-studio]
 profile = "builder"

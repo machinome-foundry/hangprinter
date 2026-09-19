@@ -17,10 +17,10 @@ to the mover.
 import math
 
 import numpy
-from solid_node.math import sqrt
-from solid_node.node import AssemblyNode
-from solid_node.parameters import Flag, Length
-from solid_node.simulation import Driver, Instruction
+from machinome.math import sqrt
+from machinome.node import AssemblyNode
+from machinome.parameters import Flag, Length
+from machinome.simulation import Driver, Instruction
 
 from simulation import layout
 from simulation.anchor import Anchor

@@ -7,8 +7,8 @@ it.
 """
 
 from solid2 import mirror
-from solid_node.node import AssemblyNode
-from solid_node.parameters import Flag
+from machinome.node import AssemblyNode
+from machinome.parameters import Flag
 
 from simulation import materials
 from simulation.frames import chain

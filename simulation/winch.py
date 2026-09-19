@@ -19,10 +19,10 @@ import math
 
 import numpy
 from molejo import P, Shape, Wrap
-from solid_node.motion.joints import Revolute
-from solid_node.motion.ports import TranslationalPort
-from solid_node.node import AssemblyNode
-from solid_node.parameters import Flag, Length
+from machinome.motion.joints import Revolute
+from machinome.motion.ports import TranslationalPort
+from machinome.node import AssemblyNode
+from machinome.parameters import Flag, Length
 
 from simulation import gt2, layout, materials
 from simulation.frames import R, T, chain, direction

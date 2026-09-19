@@ -24,7 +24,7 @@ import math
 
 import numpy
 from molejo import Polygon, Teeth
-from solid_node.node import MolejoNode
+from machinome.node import MolejoNode
 
 from simulation import materials
 from simulation.scad import scad_sources

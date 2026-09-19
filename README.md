@@ -27,7 +27,7 @@ Simulation
 ----------
 
 `simulation/` reads the version 4 design above into the whole machine,
-as a [solid-node](https://pypi.org/project/solid-node/) project: every
+as a [machinome](https://pypi.org/project/machinome/) project: every
 part `src/layout.scad` imports as an STL is that file, every part it
 calls as a module is that module through solid2's `import_scad`, and its
 placements are restated in Python in the layout's own nesting order and
@@ -39,11 +39,11 @@ bracket places, the roller bearings, the plate, the bed, the ODrives,
 the beams and the hp-mark markers.  The `.scad` sources and the `.stl`
 exports are not edited.  The design record is `openspec/`.
 
-    solid build                                  # publish the model into _build/
-    solid test --faceted simulation/hangprinter.py   # the machine's contracts, fast
-    solid test simulation/hangprinter.py         # the same, decided exactly
-    solid test simulation/winch.py:WinchABC      # one winch's belt and stack
-    solid build --set clay=false                 # the hot-end toolhead instead of the clay extruder
+    machinome build                                  # publish the model into _build/
+    machinome test --faceted simulation/hangprinter.py   # the machine's contracts, fast
+    machinome test simulation/hangprinter.py         # the same, decided exactly
+    machinome test simulation/winch.py:WinchABC      # one winch's belt and stack
+    machinome build --set clay=false                 # the hot-end toolhead instead of the clay extruder
 
 The drivers are the mover's position: `x`, `y` in millimetres from the
 calibrated origin, `z` above it, in the frame `layout.scad` draws the

@@ -5,7 +5,7 @@ turns is asked of the whole machine, which owns the drivers."""
 import math
 
 import numpy
-from solid_node.test import TestCase
+from machinome.test import TestCase
 
 from simulation.layout import (
     BELT_ROLLER_CENTRE, GT2_belt_width, GT2_motor_gear_teeth, GT2_spool_gear_teeth,
