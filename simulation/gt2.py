@@ -25,7 +25,7 @@ import math
 import numpy
 from molejo import Polygon, Teeth
 from machinome.node import MolejoNode
-from machinome_mechanics import pulley_pitch_radius
+from machinome_mechanics import belt_tangent_points, pulley_pitch_radius
 
 from simulation import materials
 from simulation.scad import scad_sources
@@ -354,12 +354,9 @@ def spans(circles):
     the two senses agree that is the external tangent; where they differ
     it is the internal one, which crosses between the centres.
     """
-    normals = _normals(circles)
+    tangents = _tangents(circles)
     result = []
-    for index, normal in enumerate(normals):
-        following = (index + 1) % len(circles)
-        start = _touch(circles[index], normal)
-        end = _touch(circles[following], normal)
+    for start, end, normal in tangents:
         result.append((start, (normal[1], -normal[0]),
                        math.hypot(end[0] - start[0], end[1] - start[1])))
     return result
@@ -418,27 +415,34 @@ def _arcs(circles):
 
 def _normals(circles):
     """The normal the belt touches each circle on, in order."""
-    normals = []
+    return [tangent[2] for tangent in _tangents(circles)]
+
+
+def _tangents(circles):
+    """Each span's contact pair and common normal, in loop order."""
+    tangents = []
     for index in range(len(circles)):
         following = (index + 1) % len(circles)
         here, there = circles[index], circles[following]
-        between = (there['center'][0] - here['center'][0],
-                   there['center'][1] - here['center'][1])
-        distance = math.hypot(*between)
-        unit = (between[0] / distance, between[1] / distance)
-        delta = (_sense(here) * here['radius']
-                 - _sense(there) * there['radius']) / distance
-        sideways = math.sqrt(1.0 - delta * delta)
-        normals.append((delta * unit[0] - sideways * unit[1],
-                        delta * unit[1] + sideways * unit[0]))
-    return normals
-
-
-def _touch(circle, normal):
-    """Where a belt running on `normal` touches `circle`."""
-    reach = _sense(circle) * circle['radius']
-    return (circle['center'][0] + reach * normal[0],
-            circle['center'][1] + reach * normal[1])
+        here_sense, there_sense = _sense(here), _sense(there)
+        here_reach = here_sense * here['radius']
+        there_reach = there_sense * there['radius']
+        here_touch, there_touch = belt_tangent_points(
+            here['center'], here['radius'], there['center'], there['radius'],
+            here_sense, there_sense)
+        if here_reach:
+            normal = ((here_touch[0] - here['center'][0]) / here_reach,
+                      (here_touch[1] - here['center'][1]) / here_reach)
+        elif there_reach:
+            normal = ((there_touch[0] - there['center'][0]) / there_reach,
+                      (there_touch[1] - there['center'][1]) / there_reach)
+        else:
+            between = (there['center'][0] - here['center'][0],
+                       there['center'][1] - here['center'][1])
+            distance = math.hypot(*between)
+            normal = (-between[1] / distance, between[0] / distance)
+        tangents.append((here_touch, there_touch, normal))
+    return tangents
 
 
 class Belt(MolejoNode):
