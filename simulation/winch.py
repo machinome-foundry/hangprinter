@@ -23,6 +23,7 @@ from machinome.motion.joints import Revolute
 from machinome.motion.ports import TranslationalPort
 from machinome.node import AssemblyNode
 from machinome.parameters import Flag, Length
+from machinome_mechanics import rolling_travel
 
 from simulation import gt2, layout, materials
 from simulation.frames import R, T, chain, direction
@@ -214,7 +215,7 @@ GEAR_RATIO = GT2_spool_gear_teeth / GT2_motor_gear_teeth
 ROLLER_RATIO = SPOOL_PITCH_RADIUS / ROLLER_RADIUS
 #: A degree of spool turn, in millimetres of belt (the spool gear's
 #: pitch-line travel).
-BELT_MM_PER_DEGREE = SPOOL_PITCH_RADIUS * math.pi / 180.0
+BELT_MM_PER_DEGREE = rolling_travel(1.0, SPOOL_PITCH_RADIUS)
 
 
 class Belt(gt2.Belt):
