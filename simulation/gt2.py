@@ -25,6 +25,7 @@ import math
 import numpy
 from molejo import Polygon, Teeth
 from machinome.node import MolejoNode
+from machinome_mechanics import pulley_pitch_radius
 
 from simulation import materials
 from simulation.scad import scad_sources
@@ -159,7 +160,7 @@ def pulley_radius(teeth, period=PITCH):
     tension.  In a drawing there is no tension to take it up with, so
     the pulley is cut to the belt it drives instead.
     """
-    return teeth * period / (2 * math.pi) - PITCH_LINE
+    return pulley_pitch_radius(teeth, period) - PITCH_LINE
 
 
 def modulation(fraction):
@@ -217,7 +218,7 @@ def _passage(teeth, period, bins):
     two halves are folded together at the end rather than derived
     twice.
     """
-    pitch_radius = teeth * period / (2 * math.pi)
+    pitch_radius = pulley_pitch_radius(teeth, period)
     flank = pitch_radius - PITCH_LINE
 
     station = numpy.linspace(0.0, period, PASSAGE_SAMPLES, endpoint=False)
