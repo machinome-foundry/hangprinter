@@ -1,12 +1,13 @@
 # Belt tangent-point migration evidence
 
-Hangprinter's GT2 loop now obtains each directed contact pair from
-`machinome_mechanics.belt_tangent_points`.  The local `_tangents` adapter
-retains the loop's clockwise/default and counterclockwise/back-idler markers,
-recovers the common normal needed by wrap and station bookkeeping, and keeps
-the old left-perpendicular normal when both radii are zero.  Fitted pitch,
-tooth phase, span and arc ordering, stations, controls, and surface allowances
-did not change.
+In this migration Hangprinter's GT2 loop began obtaining each directed contact
+pair from `machinome_mechanics.belt_tangent_points`.  Its then-local
+`_tangents` adapter retained the loop's clockwise/default and
+counterclockwise/back-idler markers, recovered the common normal needed by
+wrap and station bookkeeping, and kept the old left-perpendicular normal when
+both radii were zero.  The later path-metrics migration removed that adapter
+while retaining the same public results.  Fitted pitch, tooth phase, span and
+arc ordering, stations, controls, and surface allowances did not change.
 
 The clean base was branch `version_4` at
 `2cc703793e9029e19313b22a00472be030173e69`.  Commands ran from the project
@@ -14,7 +15,7 @@ root with the workspace executables and this source overlay (no shared install
 was changed):
 
 ```sh
-export PYTHONPATH="$PWD:/home/asa/devel/machinome-studio/WTs/mechanics-belt-tangent-points"
+export PYTHONPATH="$PWD:/home/asa/devel/machinome-studio/WTs/mechanics-belt-path-metrics"
 /home/asa/devel/machinome-studio/.venv/bin/python - <<'PY'
 import math
 from simulation import gt2
@@ -84,8 +85,9 @@ def flat(value):
     else:
         yield float(value)
 for name, circles in cases.items():
-    old_n, new_n = old_normals(circles), gt2._normals(circles)
+    old_n = old_normals(circles)
     old_s, new_s = old_spans(circles, old_n), gt2.spans(circles)
+    new_n = [(-span[1][1], span[1][0]) for span in new_s]
     old_a, new_a = old_arcs(circles, old_n), gt2._arcs(circles)
     difference = lambda a, b: max(abs(x-y) for x, y in zip(flat(a), flat(b)))
     print(name, difference(old_n, new_n), difference(old_s, new_s),

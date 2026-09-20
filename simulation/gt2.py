@@ -25,7 +25,7 @@ import math
 import numpy
 from molejo import Polygon, Teeth
 from machinome.node import MolejoNode
-from machinome_mechanics import belt_tangent_points, pulley_pitch_radius
+from machinome_mechanics import belt_path_metrics, pulley_pitch_radius
 
 from simulation import materials
 from simulation.scad import scad_sources
@@ -313,7 +313,7 @@ def length(circles):
     What a catalogue calls the belt's length, and what molejo divides by
     the tooth count to get the pitch it actually draws at.
     """
-    return sum(span[2] for span in spans(circles)) + sum(_arcs(circles))
+    return _metrics(circles)['length']
 
 
 def span_origin(circles, span):
@@ -354,12 +354,7 @@ def spans(circles):
     the two senses agree that is the external tangent; where they differ
     it is the internal one, which crosses between the centres.
     """
-    tangents = _tangents(circles)
-    result = []
-    for start, end, normal in tangents:
-        result.append((start, (normal[1], -normal[0]),
-                       math.hypot(end[0] - start[0], end[1] - start[1])))
-    return result
+    return list(_metrics(circles)['spans'])
 
 
 def stations(circles):
@@ -372,16 +367,7 @@ def stations(circles):
     arc, so converting between the two needs to know where both of them
     begin.
     """
-    lengths = []
-    arcs = _arcs(circles)
-    for index, span in enumerate(spans(circles)):
-        lengths.append(span[2])
-        lengths.append(arcs[index])
-    travelled, at = [], 0.0
-    for length in lengths:
-        travelled.append(at)
-        at += length
-    return travelled
+    return list(_metrics(circles)['stations'])
 
 
 def _sense(circle):
@@ -399,50 +385,16 @@ def _arcs(circles):
     radius along that normal or a radius against it, so the angles are
     taken from the signed normal rather than the normal itself.
     """
-    normals = _normals(circles)
-    lengths = []
-    for index in range(len(circles)):
-        following = (index + 1) % len(circles)
-        onward = _sense(circles[following])
-        arrival = math.atan2(onward * normals[index][1],
-                             onward * normals[index][0])
-        departure = math.atan2(onward * normals[following][1],
-                               onward * normals[following][0])
-        turn = (onward * (arrival - departure)) % (2 * math.pi)
-        lengths.append(circles[following]['radius'] * turn)
-    return lengths
+    arcs = _metrics(circles)['arc_lengths']
+    return list(arcs[1:] + arcs[:1])
 
 
-def _normals(circles):
-    """The normal the belt touches each circle on, in order."""
-    return [tangent[2] for tangent in _tangents(circles)]
-
-
-def _tangents(circles):
-    """Each span's contact pair and common normal, in loop order."""
-    tangents = []
-    for index in range(len(circles)):
-        following = (index + 1) % len(circles)
-        here, there = circles[index], circles[following]
-        here_sense, there_sense = _sense(here), _sense(there)
-        here_reach = here_sense * here['radius']
-        there_reach = there_sense * there['radius']
-        here_touch, there_touch = belt_tangent_points(
-            here['center'], here['radius'], there['center'], there['radius'],
-            here_sense, there_sense)
-        if here_reach:
-            normal = ((here_touch[0] - here['center'][0]) / here_reach,
-                      (here_touch[1] - here['center'][1]) / here_reach)
-        elif there_reach:
-            normal = ((there_touch[0] - there['center'][0]) / there_reach,
-                      (there_touch[1] - there['center'][1]) / there_reach)
-        else:
-            between = (there['center'][0] - here['center'][0],
-                       there['center'][1] - here['center'][1])
-            distance = math.hypot(*between)
-            normal = (-between[1] / distance, between[0] / distance)
-        tangents.append((here_touch, there_touch, normal))
-    return tangents
+def _metrics(circles):
+    """Shared path measurements adapted from this module's circle records."""
+    return belt_path_metrics(
+        tuple(circle['center'] for circle in circles),
+        tuple(circle['radius'] for circle in circles),
+        tuple(_sense(circle) for circle in circles))
 
 
 class Belt(MolejoNode):
