@@ -2,4 +2,4 @@
 model = "simulation.hangprinter:Hangprinter"
 
 [tool.machinome-studio]
-profile = "builder"
+profile = "openspec-builder"
