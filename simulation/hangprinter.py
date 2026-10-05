@@ -18,7 +18,7 @@ import math
 
 import numpy
 from machinome.math import sqrt
-from machinome.node import AssemblyNode
+from machinome.node.assembly import AssemblyNode
 from machinome.parameters import Flag, Length
 from machinome.simulation import Driver, Instruction
 

@@ -111,10 +111,10 @@ for sample in (-1, 0, .25, 1, 2):
     print(sample, tuple(tuple(evaluate(value, sample) for value in point)
                         for point in points))
 PY
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --faceted simulation/winch.py:WinchABC
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --faceted simulation/hangprinter.py
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --exact simulation/winch.py:WinchABC
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --exact simulation/hangprinter.py
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --mesh simulation/winch.py:WinchABC
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --mesh simulation/hangprinter.py
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --brep simulation/winch.py:WinchABC
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --brep simulation/hangprinter.py
 /home/asa/devel/machinome-studio/.venv/bin/machinome build
 /home/asa/devel/machinome-studio/.venv/bin/machinome snapshot simulation/winch.py:WinchABC -o /tmp/hangprinter-belt-tangents-winch.png --autocenter --viewall
 /home/asa/devel/machinome-studio/.venv/bin/machinome snapshot -o /tmp/hangprinter-belt-tangents-rest.png --autocenter

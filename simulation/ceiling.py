@@ -15,7 +15,8 @@ import math
 
 import numpy
 from solid2 import circle, cylinder, linear_extrude, square
-from machinome.node import AssemblyNode, Solid2Node
+from machinome.node.assembly import AssemblyNode
+from machinome.node.solid2 import Solid2Node
 from machinome.parameters import Length
 
 from simulation import layout, materials

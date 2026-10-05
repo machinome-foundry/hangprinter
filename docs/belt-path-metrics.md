@@ -134,10 +134,10 @@ asserts equal flattened field cardinality and a `1e-12` absolute tolerance.
 Validation commands and results were:
 
 ```sh
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --faceted simulation/winch.py:WinchABC
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --faceted simulation/hangprinter.py
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --exact simulation/winch.py:WinchABC
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --exact simulation/hangprinter.py
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --mesh simulation/winch.py:WinchABC
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --mesh simulation/hangprinter.py
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --brep simulation/winch.py:WinchABC
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --brep simulation/hangprinter.py
 /home/asa/devel/machinome-studio/.venv/bin/machinome build
 /home/asa/devel/machinome-studio/.venv/bin/machinome snapshot simulation/winch.py:WinchABC -o /tmp/hangprinter-belt-path-metrics-winch.png --autocenter --viewall
 /home/asa/devel/machinome-studio/.venv/bin/machinome snapshot -o /tmp/hangprinter-belt-path-metrics-lift.png --autocenter --drive z=300

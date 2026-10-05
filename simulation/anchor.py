@@ -7,7 +7,7 @@ it.
 """
 
 from solid2 import mirror
-from machinome.node import AssemblyNode
+from machinome.node.assembly import AssemblyNode
 from machinome.parameters import Flag
 
 from simulation import materials

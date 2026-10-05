@@ -21,8 +21,8 @@ export PYTHONPATH="$PWD:/home/asa/devel/machinome-studio/WTs/mechanics-rolling-t
 
 The executables were `/home/asa/devel/machinome-studio/.venv/bin/python` and
 `/home/asa/devel/machinome-studio/.venv/bin/machinome`; the latter ran
-`test --faceted simulation/winch.py`, `test --faceted
-simulation/hangprinter.py`, the corresponding two `--exact` commands,
+`test --mesh simulation/winch.py`, `test --mesh
+simulation/hangprinter.py`, the corresponding two `--brep` commands,
 `build`, and:
 
 ```sh

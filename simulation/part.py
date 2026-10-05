@@ -12,7 +12,9 @@ from molejo import Circle, Line, P, Shape
 from scipy.spatial.transform import Rotation
 from solid2 import cube, cylinder
 from machinome.motion.ports import TranslationalPort
-from machinome.node import MolejoNode, Solid2Node, StlNode
+from machinome.node.molejo import MolejoNode
+from machinome.node.solid2 import Solid2Node
+from machinome.node.stl import StlNode
 from machinome.parameters import Flag, Length
 
 from simulation import materials

@@ -21,7 +21,7 @@ import numpy
 from molejo import P, Shape, Wrap
 from machinome.motion.joints import Revolute
 from machinome.motion.ports import TranslationalPort
-from machinome.node import AssemblyNode
+from machinome.node.assembly import AssemblyNode
 from machinome.parameters import Flag, Length
 from machinome_mechanics import rolling_travel
 

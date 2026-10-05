@@ -32,10 +32,10 @@ mm, while `pulley_radius` preserved the allowance at 6.105353005430915 and
 6.366197723675814 mm. Validation commands were:
 
 ```sh
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --faceted simulation/winch.py
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --faceted simulation/hangprinter.py
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --exact simulation/winch.py
-/home/asa/devel/machinome-studio/.venv/bin/machinome test --exact simulation/hangprinter.py
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --mesh simulation/winch.py
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --mesh simulation/hangprinter.py
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --brep simulation/winch.py
+/home/asa/devel/machinome-studio/.venv/bin/machinome test --brep simulation/hangprinter.py
 /home/asa/devel/machinome-studio/.venv/bin/machinome build
 /home/asa/devel/machinome-studio/.venv/bin/machinome snapshot -o /tmp/hangprinter-pulley-rest.png --autocenter
 /home/asa/devel/machinome-studio/.venv/bin/machinome snapshot -o /tmp/hangprinter-pulley-lift.png --autocenter --drive z=300

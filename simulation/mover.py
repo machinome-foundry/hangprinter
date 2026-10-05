@@ -9,7 +9,8 @@ the hot end and the drive box its `else` branch draws.
 
 from solid2 import cube, cylinder
 from machinome.motion.joints import Prismatic
-from machinome.node import AssemblyNode, Solid2Node
+from machinome.node.assembly import AssemblyNode
+from machinome.node.solid2 import Solid2Node
 from machinome.parameters import Flag, Length
 
 from simulation import layout, materials

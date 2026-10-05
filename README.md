@@ -40,7 +40,7 @@ the beams and the hp-mark markers.  The `.scad` sources and the `.stl`
 exports are not edited.  The design record is `openspec/`.
 
     machinome build                                  # publish the model into _build/
-    machinome test --faceted simulation/hangprinter.py   # the machine's contracts, fast
+    machinome test --mesh simulation/hangprinter.py   # the machine's contracts, fast
     machinome test simulation/hangprinter.py         # the same, decided exactly
     machinome test simulation/winch.py:WinchABC      # one winch's belt and stack
     machinome build --set clay=false                 # the hot-end toolhead instead of the clay extruder
