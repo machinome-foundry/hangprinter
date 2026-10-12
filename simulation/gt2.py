@@ -25,7 +25,7 @@ import math
 import numpy
 from molejo import Polygon, Teeth
 from machinome.node.molejo import MolejoNode
-from machinome_mechanics import belt_path_metrics, pulley_pitch_radius
+from machinome.mechanics import belt_path_metrics, pulley_pitch_radius
 
 from simulation import materials
 from simulation.scad import scad_sources

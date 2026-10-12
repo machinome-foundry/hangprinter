@@ -23,7 +23,7 @@ from machinome.motion.joints import Revolute
 from machinome.motion.ports import TranslationalPort
 from machinome.node.assembly import AssemblyNode
 from machinome.parameters import Flag, Length
-from machinome_mechanics import rolling_travel
+from machinome.mechanics import rolling_travel
 
 from simulation import gt2, layout, materials
 from simulation.frames import R, T, chain, direction
